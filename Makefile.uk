@@ -1,0 +1,126 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#
+#  libuuid Makefile.uk
+#
+#  Authors: Felipe Huici <felipe.huici@neclab.eu>
+#
+#  Copyright (c) 2019, NEC Europe Ltd., NEC Corporation. All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions
+#  are met:
+#
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the names of its
+#     contributors may be used to endorse or promote products derived from
+#     this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#  THIS HEADER MAY NOT BE EXTRACTED OR MODIFIED IN ANY WAY.
+#
+
+################################################################################
+# Library registration
+################################################################################
+$(eval $(call addlib_s,libuuid,$(CONFIG_LIBUUID)))
+
+################################################################################
+# Sources
+################################################################################
+LIBUUID_VERSION=1.0.3
+LIBUUID_URL=https://sourceforge.net/projects/libuuid/files/libuuid-$(LIBUUID_VERSION).tar.gz/download
+LIBUUID_PATCHDIR=$(LIBUUID_BASE)/patches
+$(eval $(call fetchas,libuuid,$(LIBUUID_URL),$(LIBUUID_VERSION).tgz))
+$(eval $(call patch,libuuid,$(LIBUUID_PATCHDIR),libuuid-$(LIBUUID_VERSION)))
+
+################################################################################
+# Helpers
+################################################################################
+LIBUUID_SUBDIR=libuuid-$(LIBUUID_VERSION)
+LIBUUID_SRC=$(LIBUUID_ORIGIN)/$(LIBUUID_SUBDIR)
+
+################################################################################
+# Library includes
+################################################################################
+# Put public headers (uuid.h) in a public folder and export them globally. The
+# prepare step below takes care of populating the folder.
+$(call mk_sub_build_dir,libuuid/include/public)
+CINCLUDES-$(CONFIG_LIBUUID) += -I$(LIBUUID_BUILD)/include/public
+
+# Put private headers (the glue's config.h, and uuid's non-uuid.h headers)
+# in a private folder and export that only locally to libuuid. The prepare
+# step below takes care of populating the folder
+$(call mk_sub_build_dir,libuuid/include/private)
+LIBUUID_CINCLUDES-y += -I$(LIBUUID_BUILD)/include/private
+
+################################################################################
+# Global flags
+################################################################################
+LIBUUID_CFLAGS-y += -DHAVE_CONFIG_H
+
+# Suppress some warnings to make the build process look neater
+LIBUUID_SUPPRESS_FLAGS += -Wno-unused-parameter \
+-Wno-unused-variable -Wno-unused-value -Wno-unused-function \
+-Wno-missing-field-initializers -Wno-implicit-fallthrough \
+-Wno-char-subscripts
+LIBUUID_CFLAGS-y   += $(LIBUUID_SUPPRESS_FLAGS)
+LIBUUID_CXXFLAGS-y += $(LIBUUID_SUPPRESS_FLAGS)
+
+################################################################################
+# Sources
+################################################################################
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/clear.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/copy.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/isnull.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/parse.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/unparse.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/compare.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/gen_uuid.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/pack.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/randutils.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/unpack.c
+LIBUUID_SRCS-y += $(LIBUUID_SRC)/uuid_time.c
+
+################################################################################
+# Lib-specific Targets
+################################################################################
+$(LIBUUID_BUILD)/include/public/%.h: $(LIBUUID_SRC)/%.h
+	$(call build_cmd,LN,libuuid,$@,\
+	ln -sf $< $@)
+
+$(LIBUUID_BUILD)/include/private/%.h: $(LIBUUID_SRC)/%.h
+	$(call build_cmd,LN,libuuid,$@,\
+	ln -sf $< $@)
+
+$(LIBUUID_BUILD)/include/private/config.h: $(LIBUUID_BASE)/include/config.h
+	$(call build_cmd,LN,libuuid,$@,\
+	ln -sf $< $(LIBUUID_BUILD)/include/private/config.h)
+
+$(LIBUUID_SRC)/%.h: $(LIBUUID_BUILD)/.origin
+	@: empty recipe to enforce dependency to archive extraction
+
+# public headers
+UK_PREPARE += $(LIBUUID_BUILD)/include/public/uuid.h
+
+# private headers
+UK_PREPARE += $(LIBUUID_BUILD)/include/private/all-io.h
+UK_PREPARE += $(LIBUUID_BUILD)/include/private/c.h
+UK_PREPARE += $(LIBUUID_BUILD)/include/private/randutils.h
+UK_PREPARE += $(LIBUUID_BUILD)/include/private/uuidd.h
+UK_PREPARE += $(LIBUUID_BUILD)/include/private/uuidP.h
+UK_PREPARE += $(LIBUUID_BUILD)/include/private/config.h
