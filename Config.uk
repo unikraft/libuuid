@@ -1,0 +1,5 @@
+config LIBUUID
+	bool "libuuid - library for unique id generation"
+	default n
+	depends on HAVE_LIBC
+	select UKUNISTD
