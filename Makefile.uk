@@ -97,7 +97,7 @@ LIBUUID_SRCS-y += $(LIBUUID_SRC)/uuid_time.c
 ################################################################################
 # Lib-specific Targets
 ################################################################################
-.PRECIOUS: $(LIBUUID_EXTRACTED)/%.h
+.PRECIOUS: $(LIBUUID_SRC)/%.h
 
 $(LIBUUID_BUILD)/include/public/%.h: $(LIBUUID_SRC)/%.h
 	$(call build_cmd,LN,libuuid,$@,\
