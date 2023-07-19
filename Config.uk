@@ -1,7 +1,7 @@
 config LIBUUID
 	bool "libuuid - library for unique id generation"
 	default n
-	select LIBNEWLIBC
+	depends on HAVE_LIBC
 	select LIBPOSIX_USER
 	select LIBUKTIME
 
