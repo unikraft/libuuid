@@ -57,13 +57,13 @@ LIBUUID_SRC=$(LIBUUID_ORIGIN)/$(LIBUUID_SUBDIR)
 ################################################################################
 # Put public headers (uuid.h) in a public folder and export them globally. The
 # prepare step below takes care of populating the folder.
-$(call mk_sub_build_dir,libuuid/include/public)
+$(call mk_sub_libbuild_dir,libuuid,include/public)
 CINCLUDES-$(CONFIG_LIBUUID) += -I$(LIBUUID_BUILD)/include/public
 
 # Put private headers (the glue's config.h, and uuid's non-uuid.h headers)
 # in a private folder and export that only locally to libuuid. The prepare
 # step below takes care of populating the folder
-$(call mk_sub_build_dir,libuuid/include/private)
+$(call mk_sub_libbuild_dir,libuuid,include/private)
 LIBUUID_CINCLUDES-y += -I$(LIBUUID_BUILD)/include/private
 
 ################################################################################
