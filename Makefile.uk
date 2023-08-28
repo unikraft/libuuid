@@ -64,7 +64,7 @@ CINCLUDES-$(CONFIG_LIBUUID) += -I$(LIBUUID_BUILD)/include/public
 # in a private folder and export that only locally to libuuid. The prepare
 # step below takes care of populating the folder
 $(call mk_sub_libbuild_dir,libuuid,include/private)
-LIBUUID_CINCLUDES-y += -I$(LIBUUID_BUILD)/include/private
+LIBUUID_CINCLUDES-y += -iquote$(LIBUUID_BUILD)/include/private
 
 ################################################################################
 # Global flags
